@@ -594,8 +594,8 @@ class WebSocketServer:
     This class provides the return type of :func:`~websockets.server.serve`.
 
     It mimics the interface of :class:`~asyncio.AbstractServer`, namely its
-    :meth:`~asyncio.AbstractServer.close()` and
-    :meth:`~asyncio.AbstractServer.wait_closed()` methods, to close WebSocket
+    :meth:`~asyncio.AbstractServer.close` and
+    :meth:`~asyncio.AbstractServer.wait_closed` methods, to close WebSocket
     connections properly on exit, in addition to closing the underlying
     :class:`~asyncio.Server`.
 
@@ -722,7 +722,7 @@ class WebSocketServer:
         """
         Wait until the server is closed and all connections are terminated.
 
-        When :meth:`wait_closed()` returns, all TCP connections are closed and
+        When :meth:`wait_closed` returns, all TCP connections are closed and
         there are no pending tasks left.
 
         """
@@ -972,7 +972,7 @@ def unix_serve(
     **kwargs: Any,
 ) -> Serve:
     """
-    Similar to :func:`serve()`, but for listening on Unix sockets.
+    Similar to :func:`serve`, but for listening on Unix sockets.
 
     ``path`` is the path to the Unix socket.
 

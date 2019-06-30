@@ -102,11 +102,11 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
 
     The ``close_timeout`` parameter defines a maximum wait time in seconds for
     completing the closing handshake and terminating the TCP connection.
-    :meth:`close()` completes in at most ``4 * close_timeout`` on the server
+    :meth:`close` completes in at most ``4 * close_timeout`` on the server
     side and ``5 * close_timeout`` on the client side.
 
     ``close_timeout`` needs to be a parameter of the protocol because
-    websockets usually calls :meth:`close()` implicitly:
+    websockets usually calls :meth:`close` implicitly:
 
     - on the server side, when the connection handler terminates,
     - on the client side, when exiting the context manager for the connection.
@@ -115,17 +115,17 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
 
     The ``max_size`` parameter enforces the maximum size for incoming messages
     in bytes. The default value is 1 MiB. ``None`` disables the limit. If a
-    message larger than the maximum size is received, :meth:`recv()` will
+    message larger than the maximum size is received, :meth:`recv` will
     raise :exc:`~websockets.exceptions.ConnectionClosedError` and the
     connection will be closed with status code 1009.
 
     The ``max_queue`` parameter sets the maximum length of the queue that
     holds incoming messages. The default value is ``32``. ``None`` disables
     the limit. Messages are added to an in-memory queue when they're received;
-    then :meth:`recv()` pops from that queue. In order to prevent excessive
+    then :meth:`recv` pops from that queue. In order to prevent excessive
     memory consumption when messages are received faster than they can be
     processed, the queue must be bounded. If the queue fills up, the protocol
-    stops processing incoming data until :meth:`recv()` is called. In this
+    stops processing incoming data until :meth:`recv` is called. In this
     situation, various receive buffers (at least in ``asyncio`` and in the OS)
     will fill up, then the TCP receive window will shrink, slowing down
     transmission to avoid packet loss.
@@ -229,7 +229,7 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
         # This class implements the data transfer and closing handshake, which
         # are shared between the client-side and the server-side.
         # Subclasses implement the opening handshake and, on success, execute
-        # :meth:`connection_open()` to change the state to OPEN.
+        # :meth:`connection_open` to change the state to OPEN.
         self.state = State.CONNECTING
         logger.debug("%s - state = CONNECTING", self.side)
 
@@ -248,7 +248,7 @@ class WebSocketCommonProtocol(asyncio.StreamReaderProtocol):
         self.close_reason: str
 
         # Completed when the connection state becomes CLOSED. Translates the
-        # :meth:`connection_lost()` callback to a :class:`~asyncio.Future`
+        # :meth:`connection_lost` callback to a :class:`~asyncio.Future`
         # that can be awaited. (Other :class:`~asyncio.Protocol` callbacks are
         # translated by ``self.stream_reader``).
         self.connection_lost_waiter: asyncio.Future[None] = loop.create_future()

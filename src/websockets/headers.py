@@ -1,12 +1,11 @@
 """
-The :mod:`websockets.headers` module provides parsers and serializers for HTTP
-headers used in WebSocket handshake messages.
+:mod:`websockets.headers` provides parsers and serializers for HTTP headers
+used in WebSocket handshake messages.
 
-Its functions cannot be imported from :mod:`websockets`. They must be imported
+These APIs cannot be imported from :mod:`websockets`. They must be imported
 from :mod:`websockets.headers`.
 
 """
-
 
 import base64
 import binascii
@@ -43,9 +42,9 @@ UpgradeProtocol = NewType("UpgradeProtocol", str)
 
 def peek_ahead(header: str, pos: int) -> Optional[str]:
     """
-    Return the next character from ``header`` at the given position.
+    Returns the next character from ``header`` at the given position.
 
-    Return ``None`` at the end of ``header``.
+    Returns ``None`` at the end of ``header``.
 
     We never need to peek more than one character ahead.
 
@@ -58,9 +57,9 @@ _OWS_re = re.compile(r"[\t ]*")
 
 def parse_OWS(header: str, pos: int) -> int:
     """
-    Parse optional whitespace from ``header`` at the given position.
+    Parses optional whitespace from ``header`` at the given position.
 
-    Return the new position.
+    Returns the new position.
 
     The whitespace itself isn't returned because it isn't significant.
 
@@ -76,11 +75,11 @@ _token_re = re.compile(r"[-!#$%&\'*+.^_`|~0-9a-zA-Z]+")
 
 def parse_token(header: str, pos: int, header_name: str) -> Tuple[str, int]:
     """
-    Parse a token from ``header`` at the given position.
+    Parses a token from ``header`` at the given position.
 
-    Return the token value and the new position.
+    Returns the token value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     match = _token_re.match(header, pos)
@@ -99,11 +98,11 @@ _unquote_re = re.compile(r"\\([\x09\x20-\x7e\x80-\xff])")
 
 def parse_quoted_string(header: str, pos: int, header_name: str) -> Tuple[str, int]:
     """
-    Parse a quoted string from ``header`` at the given position.
+    Parses a quoted string from ``header`` at the given position.
 
-    Return the unquoted value and the new position.
+    Returns the unquoted value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     match = _quoted_string_re.match(header, pos)
@@ -120,7 +119,7 @@ _quote_re = re.compile(r"([\x22\x5c])")
 
 def build_quoted_string(value: str) -> str:
     """
-    Format ``value`` as a quoted string.
+    Formats ``value`` as a quoted string.
 
     This is the reverse of :func:`parse_quoted_string`.
 
@@ -138,7 +137,7 @@ def parse_list(
     header_name: str,
 ) -> List[T]:
     """
-    Parse a comma-separated list from ``header`` at the given position.
+    Parses a comma-separated list from ``header`` at the given position.
 
     This is appropriate for parsing values with the following grammar:
 
@@ -151,9 +150,9 @@ def parse_list(
     (This function is designed for parsing an entire header value and
     :func:`~websockets.http.read_headers` strips whitespace from values.)
 
-    Return a list of items.
+    Returns a list of items.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     # Per https://tools.ietf.org/html/rfc7230#section-7, "a recipient MUST
@@ -200,11 +199,11 @@ def parse_connection_option(
     header: str, pos: int, header_name: str
 ) -> Tuple[ConnectionOption, int]:
     """
-    Parse a Connection option from ``header`` at the given position.
+    Parses a Connection option from ``header`` at the given position.
 
-    Return the protocol value and the new position.
+    Returns the protocol value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     item, pos = parse_token(header, pos, header_name)
@@ -213,11 +212,12 @@ def parse_connection_option(
 
 def parse_connection(header: str) -> List[ConnectionOption]:
     """
-    Parse a ``Connection`` header.
+    Parses a ``Connection`` header.
 
-    Return a list of connection options.
+    Returns a list of HTTP connection options.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :param str header: value of the ``Connection`` header
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     return parse_list(parse_connection_option, header, 0, "Connection")
@@ -232,11 +232,11 @@ def parse_upgrade_protocol(
     header: str, pos: int, header_name: str
 ) -> Tuple[UpgradeProtocol, int]:
     """
-    Parse an Upgrade protocol from ``header`` at the given position.
+    Parses an Upgrade protocol from ``header`` at the given position.
 
-    Return the protocol value and the new position.
+    Returns the protocol value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     match = _protocol_re.match(header, pos)
@@ -247,11 +247,12 @@ def parse_upgrade_protocol(
 
 def parse_upgrade(header: str) -> List[UpgradeProtocol]:
     """
-    Parse an ``Upgrade`` header.
+    Parses an ``Upgrade`` header.
 
-    Return a list of protocols.
+    Returns a list of HTTP protocols.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :param str header: value of the ``Upgrade`` header
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     return parse_list(parse_upgrade_protocol, header, 0, "Upgrade")
@@ -261,11 +262,11 @@ def parse_extension_item_param(
     header: str, pos: int, header_name: str
 ) -> Tuple[ExtensionParameter, int]:
     """
-    Parse a single extension parameter from ``header`` at the given position.
+    Parses a single extension parameter from ``header`` at the given position.
 
-    Return a ``(name, value)`` pair and the new position.
+    Returns a ``(name, value)`` pair and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     # Extract parameter name.
@@ -295,12 +296,12 @@ def parse_extension_item(
     header: str, pos: int, header_name: str
 ) -> Tuple[ExtensionHeader, int]:
     """
-    Parse an extension definition from ``header`` at the given position.
+    Parses an extension definition from ``header`` at the given position.
 
-    Return an ``(extension name, parameters)`` pair, where ``parameters`` is a
+    Returns an ``(extension name, parameters)`` pair, where ``parameters`` is a
     list of ``(name, value)`` pairs, and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     # Extract extension name.
@@ -317,9 +318,9 @@ def parse_extension_item(
 
 def parse_extension(header: str) -> List[ExtensionHeader]:
     """
-    Parse a ``Sec-WebSocket-Extensions`` header.
+    Parses a ``Sec-WebSocket-Extensions`` header.
 
-    Return a value with the following format::
+    Returns a list of WebSocket extensions and their parameters in this format::
 
         [
             (
@@ -334,7 +335,7 @@ def parse_extension(header: str) -> List[ExtensionHeader]:
 
     Parameter values are ``None`` when no value is provided.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     return parse_list(parse_extension_item, header, 0, "Sec-WebSocket-Extensions")
@@ -345,7 +346,7 @@ parse_extension_list = parse_extension  # alias for backwards-compatibility
 
 def build_extension_item(name: str, parameters: List[ExtensionParameter]) -> str:
     """
-    Build an extension definition.
+    Builds an extension definition.
 
     This is the reverse of :func:`parse_extension_item`.
 
@@ -362,7 +363,7 @@ def build_extension_item(name: str, parameters: List[ExtensionParameter]) -> str
 
 def build_extension(extensions: Sequence[ExtensionHeader]) -> str:
     """
-    Unparse a ``Sec-WebSocket-Extensions`` header.
+    Builds a ``Sec-WebSocket-Extensions`` header.
 
     This is the reverse of :func:`parse_extension`.
 
@@ -379,11 +380,11 @@ def parse_subprotocol_item(
     header: str, pos: int, header_name: str
 ) -> Tuple[Subprotocol, int]:
     """
-    Parse a subprotocol from ``header`` at the given position.
+    Parses a subprotocol from ``header`` at the given position.
 
-    Return the subprotocol value and the new position.
+    Returns the subprotocol value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     item, pos = parse_token(header, pos, header_name)
@@ -392,9 +393,11 @@ def parse_subprotocol_item(
 
 def parse_subprotocol(header: str) -> List[Subprotocol]:
     """
-    Parse a ``Sec-WebSocket-Protocol`` header.
+    Parses a ``Sec-WebSocket-Protocol`` header.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    Returns a list of WebSocket subprotocols.
+
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     return parse_list(parse_subprotocol_item, header, 0, "Sec-WebSocket-Protocol")
@@ -405,7 +408,7 @@ parse_subprotocol_list = parse_subprotocol  # alias for backwards-compatibility
 
 def build_subprotocol(protocols: Sequence[Subprotocol]) -> str:
     """
-    Unparse a ``Sec-WebSocket-Protocol`` header.
+    Builds a ``Sec-WebSocket-Protocol`` header.
 
     This is the reverse of :func:`parse_subprotocol`.
 
@@ -418,7 +421,9 @@ build_subprotocol_list = build_subprotocol  # alias for backwards-compatibility
 
 def build_www_authenticate_basic(realm: str) -> str:
     """
-    Build an WWW-Authenticate header for HTTP Basic Auth.
+    Builds a ``WWW-Authenticate`` header for HTTP Basic Auth.
+
+    :param str realm: authentication realm
 
     """
     # https://tools.ietf.org/html/rfc7617#section-2
@@ -427,28 +432,16 @@ def build_www_authenticate_basic(realm: str) -> str:
     return f"Basic realm={realm}, charset={charset}"
 
 
-def build_authorization_basic(username: str, password: str) -> str:
-    """
-    Build an Authorization header for HTTP Basic Auth.
-
-    """
-    # https://tools.ietf.org/html/rfc7617#section-2
-    assert ":" not in username
-    user_pass = f"{username}:{password}"
-    basic_credentials = base64.b64encode(user_pass.encode()).decode()
-    return "Basic " + basic_credentials
-
-
 _token68_re = re.compile(r"[A-Za-z0-9-._~+/]+=*")
 
 
 def parse_token68(header: str, pos: int, header_name: str) -> Tuple[str, int]:
     """
-    Parse a token68 from ``header`` at the given position.
+    Parses a token68 from ``header`` at the given position.
 
-    Return the token value and the new position.
+    Returns the token value and the new position.
 
-    Raise :exc:`~websockets.exceptions.InvalidHeaderFormat` on invalid inputs.
+    :raises ~websockets.exceptions.InvalidHeaderFormat: on invalid inputs.
 
     """
     match = _token68_re.match(header, pos)
@@ -468,9 +461,13 @@ def parse_end(header: str, pos: int, header_name: str) -> None:
 
 def parse_authorization_basic(header: str) -> Tuple[str, str]:
     """
-    Parse an Authorization header for HTTP Basic Auth.
+    Parses an ``Authorization`` header for HTTP Basic Auth.
 
-    Return a ``(username, password)`` tuple.
+    Returns a ``(username, password)`` tuple.
+
+    :param str header: value of the ``Authorization`` header
+    :raises InvalidHeaderFormat: on invalid inputs
+    :raises InvalidHeaderValue: on unsupported inputs
 
     """
     # https://tools.ietf.org/html/rfc7235#section-2.1
@@ -500,3 +497,17 @@ def parse_authorization_basic(header: str) -> Tuple[str, str]:
         ) from None
 
     return username, password
+
+
+def build_authorization_basic(username: str, password: str) -> str:
+    """
+    Builds an ``Authorization`` header for HTTP Basic Auth.
+
+    This is the reverse of :func:`parse_authorization_basic`.
+
+    """
+    # https://tools.ietf.org/html/rfc7617#section-2
+    assert ":" not in username
+    user_pass = f"{username}:{password}"
+    basic_credentials = base64.b64encode(user_pass.encode()).decode()
+    return "Basic " + basic_credentials

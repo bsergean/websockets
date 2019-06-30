@@ -1,6 +1,5 @@
 """
-The :mod:`websockets.framing` module implements data framing as specified in
-`section 5 of RFC 6455`_.
+:mod:`websockets.framing` reads and writes frames per `section 5 of RFC 6455`_.
 
 It deals with a single frame at a time. Anything that depends on the sequence
 of frames is implemented in :mod:`websockets.protocol`.
@@ -67,16 +66,15 @@ class Frame(FrameData):
     """
     WebSocket frame.
 
-    * ``fin`` is the FIN bit
-    * ``rsv1`` is the RSV1 bit
-    * ``rsv2`` is the RSV2 bit
-    * ``rsv3`` is the RSV3 bit
-    * ``opcode`` is the opcode
-    * ``data`` is the payload data
+    :param bool fin: FIN bit
+    :param bool rsv1: RSV1 bit
+    :param bool rsv2: RSV2 bit
+    :param bool rsv3: RSV3 bit
+    :param int opcode: opcode
+    :param bytes data: payload data
 
-    Only these fields are needed by higher level code. The MASK bit, payload
-    length and masking-key are handled on the fly by :meth:`read` and
-    :meth:`write`.
+    Only these fields are needed. The MASK bit, payload length and masking-key
+    are handled on the fly by :meth:`read` and :meth:`write`.
 
     """
 
@@ -101,24 +99,20 @@ class Frame(FrameData):
         extensions: Optional[Sequence["websockets.extensions.base.Extension"]] = None,
     ) -> "Frame":
         """
-        Read a WebSocket frame and return a :class:`Frame` object.
+        Reads a WebSocket frame.
 
-        ``reader`` is a coroutine taking an integer argument and reading
-        exactly this number of bytes, unless the end of file is reached.
-
-        ``mask`` is a :class:`bool` telling whether the frame should be masked
-        i.e. whether the read happens on the server side.
-
-        If ``max_size`` is set and the payload exceeds this size in bytes,
-        :exc:`~websockets.exceptions.PayloadTooBig` is raised.
-
-        If ``extensions`` is provided, it's a list of classes with an
-        ``decode()`` method that transform the frame and return a new frame.
-        They are applied in reverse order.
-
-        This function validates the frame before returning it and raises
-        :exc:`~websockets.exceptions.WebSocketProtocolError` if it contains
-        incorrect values.
+        :param coroutine reader: coroutine that reads exactly the requested
+            number of bytes, unless the end of file is reached
+        :param bool mask: whether the frame should be masked i.e. whether the
+            read happens on the server side
+        :param int max_size: maximum payload size in bytes
+        :param Sequence[Extension] extensions: list of classes with a
+            ``decode()`` method that transforms the frame and return a new
+            frame; extensions are applied in reverse order
+        :raises ~websockets.exceptions.PayloadTooBig: if the frame exceeds
+            ``max_size``
+        :raises ~websockets.exceptions.WebSocketProtocolError: if the frame
+            contains incorrect values
 
         """
         # Read the header.
@@ -173,22 +167,17 @@ class Frame(FrameData):
         extensions: Optional[Sequence["websockets.extensions.base.Extension"]] = None,
     ) -> None:
         """
-        Write a WebSocket frame.
+        Writes a WebSocket frame.
 
-        ``frame`` is the :class:`Frame` object to write.
-
-        ``writer`` is a function accepting bytes.
-
-        ``mask`` is a :class:`bool` telling whether the frame should be masked
-        i.e. whether the write happens on the client side.
-
-        If ``extensions`` is provided, it's a list of classes with an
-        ``encode()`` method that transform the frame and return a new frame.
-        They are applied in order.
-
-        This function validates the frame before sending it and raises
-        :exc:`~websockets.exceptions.WebSocketProtocolError` if it contains
-        incorrect values.
+        :param Frame frame: frame to write
+        :param function writer: function that writes bytes
+        :param bool mask: whether the frame should be masked i.e. whether the
+            write happens on the client side
+        :param Sequence[Extension] extensions: list of classes with an
+            ``encode()`` method that transform the frame and return a new
+            frame; extensions are applied in order
+        :raises ~websockets.exceptions.WebSocketProtocolError: if the frame
+            contains incorrect values
 
         """
         # The first parameter is called `frame` rather than `self`,
@@ -242,10 +231,10 @@ class Frame(FrameData):
 
     def check(frame) -> None:
         """
-        Check that this frame contains acceptable values.
+        Checks that reserved bits and opcode have acceptable values.
 
-        Raise :exc:`~websockets.exceptions.WebSocketProtocolError` if this
-        frame contains incorrect values.
+        :raises ~websockets.exceptions.WebSocketProtocolError: if a reserved
+            bit or the opcode is invalid
 
         """
         # The first parameter is called `frame` rather than `self`,
@@ -267,7 +256,7 @@ class Frame(FrameData):
 
 def prepare_data(data: Data) -> Tuple[int, bytes]:
     """
-    Convert a string or byte-like object to an opcode and a bytes-like object.
+    Converts a string or byte-like object to an opcode and a bytes-like object.
 
     This function is designed for data frames.
 
@@ -277,7 +266,7 @@ def prepare_data(data: Data) -> Tuple[int, bytes]:
     If ``data`` is a bytes-like object, return ``OP_BINARY`` and a bytes-like
     object.
 
-    Raise :exc:`TypeError` for other inputs.
+    :raises TypeError: if ``data`` doesn't have a supported type
 
     """
     if isinstance(data, str):
@@ -295,16 +284,16 @@ def prepare_data(data: Data) -> Tuple[int, bytes]:
 
 def encode_data(data: Data) -> bytes:
     """
-    Convert a string or byte-like object to bytes.
+    Converts a string or byte-like object to bytes.
 
-    This function is designed for ping and pon g frames.
+    This function is designed for ping and pong frames.
 
     If ``data`` is a :class:`str`, return a :class:`bytes` object encoding
     ``data`` in UTF-8.
 
     If ``data`` is a bytes-like object, return a :class:`bytes` object.
 
-    Raise :exc:`TypeError` for other inputs.
+    :raises TypeError: if ``data`` doesn't have a supported type
 
     """
     if isinstance(data, str):
@@ -319,13 +308,10 @@ def encode_data(data: Data) -> bytes:
 
 def parse_close(data: bytes) -> Tuple[int, str]:
     """
-    Parse the data in a close frame.
+    Parses the data in a close frame andd returns ``(code, reason)``.
 
-    Return ``(code, reason)`` when ``code`` is an :class:`int` and ``reason``
-    a :class:`str`.
-
-    Raise :exc:`~websockets.exceptions.WebSocketProtocolError` or
-    :exc:`UnicodeDecodeError` if the data is invalid.
+    :raises ~websockets.exceptions.WebSocketProtocolError: if data is ill-formed
+    :raises UnicodeDecodeError: if the reason isn't valid UTF-8
 
     """
     length = len(data)
@@ -343,7 +329,7 @@ def parse_close(data: bytes) -> Tuple[int, str]:
 
 def serialize_close(code: int, reason: str) -> bytes:
     """
-    Serialize the data for a close frame.
+    Serializes the data for a close frame.
 
     This is the reverse of :func:`parse_close`.
 
@@ -354,7 +340,10 @@ def serialize_close(code: int, reason: str) -> bytes:
 
 def check_close(code: int) -> None:
     """
-    Check the close code for a close frame.
+    Checks that the close code has an acceptable value for a close frame.
+
+    :raises ~websockets.exceptions.WebSocketProtocolError: if the close code
+        is invalid
 
     """
     if not (code in EXTERNAL_CLOSE_CODES or 3000 <= code < 5000):
